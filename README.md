@@ -1,36 +1,34 @@
-# Etiquetas Total
+﻿# Etiquetas Total
 
-Projeto inicial para uma página web estática compatível com GitHub Pages.
+Pagina web estatica hospedada no GitHub Pages para tratamento automatizado de arquivos CSV de remessas.
 
-## Objetivo atual
+## O que o sistema faz
 
-- permitir upload de arquivo Excel no navegador
-- reimplementar o processamento por etapas
-- gerar arquivo final para download apos validacao dos passos
+Recebe um arquivo .csv e aplica as seguintes transformacoes em sequencia:
 
-## Ponto importante de arquitetura
+1. Remove todas as aspas simples de todas as celulas
+2. Substitui todas as linhas da coluna **CNPJ** pelo valor fixo `34446018000133`
+3. Substitui valores `null` na coluna **DestTelefone1** por `111111111`
+4. Preenche celulas vazias ou `null` nas colunas **DestEnd**, **DestEndNum** e **DestCompl** com `1`
+5. Trunca o conteudo da coluna **DestCompl** para no maximo 99 caracteres
+6. Substitui variantes de Nao informado na coluna **DestEMAIL** por `naoinformado`
+7. Ordena todas as linhas em ordem alfabetica pela coluna **DESTNOME**
 
-GitHub Pages não executa backend Python. Isso significa que o tratamento do arquivo precisa seguir um destes caminhos:
+O arquivo de saida e nomeado automaticamente como `CSV_TOTAL_DD_MM_YYYY.csv`, usando a data extraida da coluna **NFeData**.
 
-1. Python rodando no navegador, por exemplo com Pyodide
-2. Reescrever a lógica de transformação em JavaScript
-3. Hospedar o processamento em outro serviço e usar a página apenas como interface
+## Estrutura do projeto
 
-## Estrutura criada
+- `index.html` - pagina principal
+- `styles.css` - interface visual
+- `app.js` - toda a logica de processamento em JavaScript puro
 
-- `index.html`: página principal
-- `styles.css`: interface visual
-- `app.js`: validação inicial do upload e estados da interface
-- `.github/copilot-instructions.md`: checklist de inicialização do workspace
+## Como usar
 
-## Proximo passo esperado
+1. Acesse a pagina pelo GitHub Pages
+2. Selecione o arquivo `.csv`
+3. Clique em **Processar**
+4. Clique em **Baixar** para obter o arquivo tratado
 
-Processamento reiniciado do zero. A implementacao sera refeita por partes a partir da proxima instrucao.
+## Execucao local
 
-1. receber o arquivo Excel
-2. aplicar cada regra de negocio individualmente
-3. validar o resultado e gerar o arquivo final
-
-## Execução local
-
-Como esta versão inicial não depende de build, basta abrir `index.html` no navegador para visualizar a interface.
+Sem dependencias ou build. Basta abrir `index.html` diretamente no navegador.
