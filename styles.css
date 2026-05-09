@@ -51,6 +51,19 @@ body::before {
   animation: rise 700ms ease-out both;
 }
 
+.hero-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero-logo {
+  height: 52px;
+  width: auto;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
 .eyebrow,
 .panel-tag,
 .summary-label {
