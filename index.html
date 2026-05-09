@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV Total</title>
+    <meta
+      name="description"
+      content="Interface inicial para upload e tratamento de planilhas no navegador, pronta para GitHub Pages."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <h2>CSV Total</h2>
+      </header>
+
+      <main class="layout">
+        <section class="panel upload-panel">
+          <div class="panel-heading">
+            <h2>Enviar planilha</h2>
+            <span class="panel-tag">.csv (Excel)</span>
+          </div>
+
+          <label class="upload-dropzone" for="excelFile">
+            <input id="excelFile" type="file" accept=".csv,text/csv" />
+            <span class="upload-title">Selecione ou arraste sua planilha</span>
+          </label>
+
+          <div class="file-summary" id="fileSummary" aria-live="polite">
+            <p class="summary-label">Nenhum arquivo selecionado</p>
+          </div>
+
+          <div class="actions">
+            <button id="processButton" class="primary-button" type="button">
+              Processar arquivo
+            </button>
+            <button id="downloadButton" class="ghost-button" type="button" disabled>
+              Baixar resultado
+            </button>
+          </div>
+          <p class="status-message" id="statusMessage" aria-live="polite">
+            Selecione um CSV para aplicar as regras de tratamento e gerar o arquivo final.
+          </p>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
