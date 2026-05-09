@@ -1,6 +1,5 @@
 const fileInput = document.querySelector("#excelFile");
 const processButton = document.querySelector("#processButton");
-const downloadButton = document.querySelector("#downloadButton");
 const fileSummary = document.querySelector("#fileSummary");
 const statusMessage = document.querySelector("#statusMessage");
 
@@ -8,6 +7,7 @@ const supportedExtensions = ["csv"];
 
 const CNPJ_VALUE = "34446018000133";
 const COLUMN_CNPJ = 1;
+const COLUMN_DESTCPFCNPJ = 15;
 const COLUMN_DEST_TELEFONE1 = 28;
 const DEST_TELEFONE1_NULL_REPLACEMENT = "111111111";
 const COLUMN_DEST_END = 17;
@@ -16,6 +16,8 @@ const COLUMN_DEST_COMPL = 19;
 const COLUMN_DESTNOME = 14;
 const COLUMN_DEST_EMAIL = 26;
 const DEST_EMAIL_NAO_INFORMADO_REPLACEMENT = "naoinformado";
+const COLUMN_DEST_CEP = 25;
+const COLUMN_AG_DATA = 35;
 const COLUMN_NFE_DATA = 41;
 const EMPTY_COLUMN_REPLACEMENT = "1";
 
@@ -51,7 +53,6 @@ fileInput.addEventListener("change", (event) => {
 
   statusMessage.textContent = "Arquivo CSV validado. Pronto para processar.";
   processButton.disabled = false;
-  downloadButton.disabled = true;
 });
 
 processButton.addEventListener("click", async () => {
@@ -77,48 +78,39 @@ processButton.addEventListener("click", async () => {
     const withTelefone1 = fillTelefone1NullValues(withCnpj);
     const withAddress = fillEmptyAddressColumns(withTelefone1);
     const withEmail = normalizeDestEmail(withAddress);
-    const processedRows = sortByDestNome(withEmail);
+    const withSorted = sortByDestNome(withEmail);
+    const withDates = convertDatesToBrFormat(withSorted);
+    const processedRows = applyExcelNumericFormatting(withDates);
     const csvOutput = buildCsv(processedRows, delimiter);
     const dateValue = processedRows.length > 1 ? String(processedRows[1][COLUMN_NFE_DATA] ?? "").trim() : "";
     processedFileName = dateValue ? `CSV_TOTAL_${formatDateDDMMYYYY(dateValue)}.csv` : "CSV_TOTAL.csv";
 
     clearProcessedBlob();
-    const excelFriendlyOutput = `\uFEFF${csvOutput}`;
-    processedBlobUrl = URL.createObjectURL(new Blob([excelFriendlyOutput], { type: "text/csv;charset=utf-8;" }));
-    downloadButton.disabled = false;
-    statusMessage.textContent = "Passos 1-6 concluidos: aspas simples removidas, CNPJ preenchido, DestTelefone1 tratada, endereços preenchidos, DestEMAIL normalizado e linhas ordenadas por DESTNOME.";
+    const encoded = encodeWindows1252(csvOutput);
+    const blob = new Blob([encoded], { type: "text/csv;charset=windows-1252;" });
+    processedBlobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = processedBlobUrl;
+    link.download = processedFileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    statusMessage.textContent = "Arquivo tratado e ordenado em ordem alfabética. Download iniciado.";
   } catch (error) {
-    downloadButton.disabled = true;
     statusMessage.textContent = `Falha no processamento: ${error.message}`;
   } finally {
     processButton.disabled = false;
   }
 });
 
-downloadButton.addEventListener("click", () => {
-  if (!processedBlobUrl) {
-    statusMessage.textContent = "Ainda nao existe arquivo processado para download.";
-    return;
-  }
 
-  const link = document.createElement("a");
-  link.href = processedBlobUrl;
-  link.download = processedFileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  statusMessage.textContent = "Download iniciado com sucesso.";
-});
 
 function resetState() {
   clearProcessedBlob();
   fileSummary.innerHTML = `
     <p class="summary-label">Nenhum arquivo selecionado</p>
-    <p class="summary-value">Escolha um arquivo CSV para iniciar novamente do zero.</p>
   `;
-  statusMessage.textContent = "Processamento reiniciado do zero.";
   processButton.disabled = true;
-  downloadButton.disabled = true;
 }
 
 resetState();
@@ -129,6 +121,41 @@ function formatDateDDMMYYYY(value) {
   if (isoMatch) return `${isoMatch[3]}_${isoMatch[2]}_${isoMatch[1]}`;
   // BR slash: 08/05/2026 → 08_05_2026
   return value.replace(/\//g, "_");
+}
+
+function convertDatesToBrFormat(rows) {
+  if (rows.length === 0) return rows;
+  const header = rows[0];
+  const dataRows = rows.slice(1).map((row) => {
+    const next = [...row];
+    for (const col of [COLUMN_AG_DATA, COLUMN_NFE_DATA]) {
+      if (next.length > col) {
+        const val = String(next[col]).trim();
+        const isoMatch = val.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (isoMatch) next[col] = `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+      }
+    }
+    return next;
+  });
+  return [header, ...dataRows];
+}
+
+function applyExcelNumericFormatting(rows) {
+  if (rows.length === 0) return rows;
+  const header = rows[0];
+  const dataRows = rows.slice(1).map((row) => {
+    const next = [...row];
+    for (const col of [COLUMN_DESTCPFCNPJ, COLUMN_DEST_CEP]) {
+      while (next.length <= col) next.push("");
+      const val = String(next[col]).trim();
+      const stripped = val.replace(/^0+/, "") || val;
+      next[col] = stripped + "    ";
+    }
+    while (next.length <= COLUMN_DEST_TELEFONE1) next.push("");
+    next[COLUMN_DEST_TELEFONE1] = String(next[COLUMN_DEST_TELEFONE1]) + "    ";
+    return next;
+  });
+  return [header, ...dataRows];
 }
 
 function normalizeDestEmail(rows) {
@@ -335,6 +362,31 @@ function countDelimiterOutOfQuotes(line, delimiter) {
   }
 
   return count;
+}
+
+function encodeWindows1252(str) {
+  const special = new Map([
+    [0x20ac, 0x80], [0x201a, 0x82], [0x0192, 0x83], [0x201e, 0x84], [0x2026, 0x85],
+    [0x2020, 0x86], [0x2021, 0x87], [0x02c6, 0x88], [0x2030, 0x89], [0x0160, 0x8a],
+    [0x2039, 0x8b], [0x0152, 0x8c], [0x017d, 0x8e], [0x2018, 0x91], [0x2019, 0x92],
+    [0x201c, 0x93], [0x201d, 0x94], [0x2022, 0x95], [0x2013, 0x96], [0x2014, 0x97],
+    [0x02dc, 0x98], [0x2122, 0x99], [0x0161, 0x9a], [0x203a, 0x9b], [0x0153, 0x9c],
+    [0x017e, 0x9e], [0x0178, 0x9f],
+  ]);
+  const bytes = [];
+  for (let i = 0; i < str.length; i += 1) {
+    const code = str.charCodeAt(i);
+    if (code < 0x80) {
+      bytes.push(code);
+    } else if (code >= 0xa0 && code <= 0xff) {
+      bytes.push(code);
+    } else if (special.has(code)) {
+      bytes.push(special.get(code));
+    } else {
+      bytes.push(0x3f);
+    }
+  }
+  return new Uint8Array(bytes);
 }
 
 function buildCsv(rows, delimiter) {
