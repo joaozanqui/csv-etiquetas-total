@@ -78,7 +78,8 @@ processButton.addEventListener("click", async () => {
     const withTelefone1 = fillTelefone1NullValues(withCnpj);
     const withAddress = fillEmptyAddressColumns(withTelefone1);
     const withEmail = normalizeDestEmail(withAddress);
-    const withSorted = sortByDestNome(withEmail);
+    const withCep = normalizeCepColumn(withEmail);
+    const withSorted = sortByDestNome(withCep);
     const withDates = convertDatesToBrFormat(withSorted);
     const processedRows = applyExcelNumericFormatting(withDates);
     const csvOutput = buildCsv(processedRows, delimiter);
@@ -153,6 +154,19 @@ function applyExcelNumericFormatting(rows) {
     }
     while (next.length <= COLUMN_DEST_TELEFONE1) next.push("");
     next[COLUMN_DEST_TELEFONE1] = String(next[COLUMN_DEST_TELEFONE1]) + "    ";
+    return next;
+  });
+  return [header, ...dataRows];
+}
+
+function normalizeCepColumn(rows) {
+  if (rows.length === 0) return rows;
+  const header = rows[0];
+  const dataRows = rows.slice(1).map((row) => {
+    const next = [...row];
+    while (next.length <= COLUMN_DEST_CEP) next.push("");
+    const onlyDigits = String(next[COLUMN_DEST_CEP]).replace(/\D/g, "");
+    next[COLUMN_DEST_CEP] = onlyDigits === "" ? "0" : onlyDigits;
     return next;
   });
   return [header, ...dataRows];
