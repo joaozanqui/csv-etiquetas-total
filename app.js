@@ -25,6 +25,53 @@ let selectedFile = null;
 let processedBlobUrl = null;
 let processedFileName = "arquivo_passo6.csv";
 
+const dragOverlay = document.querySelector("#dragOverlay");
+const loadingOverlay = document.querySelector("#loadingOverlay");
+let dragCounter = 0;
+
+document.addEventListener("dragenter", (e) => {
+  e.preventDefault();
+  dragCounter++;
+  dragOverlay.classList.add("active");
+});
+
+document.addEventListener("dragleave", () => {
+  dragCounter--;
+  if (dragCounter <= 0) {
+    dragCounter = 0;
+    dragOverlay.classList.remove("active");
+  }
+});
+
+document.addEventListener("dragover", (e) => {
+  e.preventDefault();
+});
+
+document.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dragCounter = 0;
+  dragOverlay.classList.remove("active");
+
+  const file = e.dataTransfer?.files?.[0];
+  if (!file) return;
+
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  if (!supportedExtensions.includes(extension)) {
+    statusMessage.textContent = "Formato invalido. Envie um arquivo .csv.";
+    return;
+  }
+
+  selectedFile = file;
+  processedFileName = buildProcessedName(file.name);
+  clearProcessedBlob();
+  fileSummary.innerHTML = `
+    <p class="summary-label">Arquivo pronto para iniciar</p>
+    <p class="summary-value"><strong>${file.name}</strong><br>Tamanho: ${formatBytes(file.size)}</p>
+  `;
+  statusMessage.textContent = "Arquivo CSV validado. Pronto para processar.";
+  processButton.disabled = false;
+});
+
 fileInput.addEventListener("change", (event) => {
   const [file] = event.target.files;
 
@@ -63,6 +110,8 @@ processButton.addEventListener("click", async () => {
 
   processButton.disabled = true;
   statusMessage.textContent = "Processando arquivo...";
+  loadingOverlay.classList.add("active");
+  await new Promise((r) => setTimeout(r, 0));
 
   try {
     const rawText = await readCsvText(selectedFile);
@@ -100,6 +149,7 @@ processButton.addEventListener("click", async () => {
   } catch (error) {
     statusMessage.textContent = `Falha no processamento: ${error.message}`;
   } finally {
+    loadingOverlay.classList.remove("active");
     processButton.disabled = false;
   }
 });

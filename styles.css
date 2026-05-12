@@ -158,6 +158,108 @@ h1 {
   display: none;
 }
 
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(244, 239, 231, 0.72);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.loading-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 44px 60px;
+  background: var(--surface-strong);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+}
+
+.loading-inner p {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 1rem;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 500;
+  margin: 0;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(13, 107, 93, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.drag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 107, 93, 0.18);
+  backdrop-filter: blur(6px);
+  border: 3px dashed var(--primary);
+  border-radius: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.drag-overlay.active {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.drag-overlay-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 60px;
+  background: var(--surface-strong);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  border: 2px dashed var(--primary);
+}
+
+.drag-overlay-icon {
+  font-size: 3.5rem;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.drag-overlay-inner p {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 1.1rem;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
 .upload-title {
   font-size: 1.4rem;
   font-weight: 700;
