@@ -17,6 +17,7 @@ const COLUMN_DESTNOME = 14;
 const COLUMN_DEST_EMAIL = 26;
 const DEST_EMAIL_NAO_INFORMADO_REPLACEMENT = "naoinformado";
 const COLUMN_DEST_BAIRRO = 21;
+const COLUMN_DEST_ESTADO = 23;
 const COLUMN_DEST_CEP = 25;
 const COLUMN_AG_DATA = 35;
 const COLUMN_NFE_DATA = 41;
@@ -130,7 +131,8 @@ processButton.addEventListener("click", async () => {
     const withBairro = fillEmptyBairroColumn(withAddress);
     const withEmail = normalizeDestEmail(withBairro);
     const withCep = normalizeCepColumn(withEmail);
-    const withSorted = sortByDestNome(withCep);
+    const withEstado = normalizeDestEstado(withCep);
+    const withSorted = sortByDestNome(withEstado);
     const withDates = convertDatesToBrFormat(withSorted);
     const processedRows = applyExcelNumericFormatting(withDates);
     const csvOutput = buildCsv(processedRows, delimiter);
@@ -220,6 +222,19 @@ function fillEmptyBairroColumn(rows) {
     if (String(next[COLUMN_DEST_BAIRRO]).trim() === "" || String(next[COLUMN_DEST_BAIRRO]).trim().toLowerCase() === "null") {
       next[COLUMN_DEST_BAIRRO] = "NÃO INFORMADO";
     }
+    return next;
+  });
+  return [header, ...dataRows];
+}
+
+function normalizeDestEstado(rows) {
+  if (rows.length === 0) return rows;
+  const header = rows[0];
+  const dataRows = rows.slice(1).map((row) => {
+    const next = [...row];
+    while (next.length <= COLUMN_DEST_ESTADO) next.push("");
+    const val = String(next[COLUMN_DEST_ESTADO]).trim();
+    next[COLUMN_DEST_ESTADO] = /^[A-Za-z]{2}$/.test(val) ? val.toUpperCase() : "XX";
     return next;
   });
   return [header, ...dataRows];
