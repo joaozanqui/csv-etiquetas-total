@@ -16,6 +16,7 @@ const COLUMN_DEST_COMPL = 19;
 const COLUMN_DESTNOME = 14;
 const COLUMN_DEST_EMAIL = 26;
 const DEST_EMAIL_NAO_INFORMADO_REPLACEMENT = "naoinformado";
+const COLUMN_DEST_BAIRRO = 21;
 const COLUMN_DEST_CEP = 25;
 const COLUMN_AG_DATA = 35;
 const COLUMN_NFE_DATA = 41;
@@ -126,7 +127,8 @@ processButton.addEventListener("click", async () => {
     const withCnpj = fillCnpjColumn(withoutQuotes);
     const withTelefone1 = fillTelefone1NullValues(withCnpj);
     const withAddress = fillEmptyAddressColumns(withTelefone1);
-    const withEmail = normalizeDestEmail(withAddress);
+    const withBairro = fillEmptyBairroColumn(withAddress);
+    const withEmail = normalizeDestEmail(withBairro);
     const withCep = normalizeCepColumn(withEmail);
     const withSorted = sortByDestNome(withCep);
     const withDates = convertDatesToBrFormat(withSorted);
@@ -204,6 +206,20 @@ function applyExcelNumericFormatting(rows) {
     }
     while (next.length <= COLUMN_DEST_TELEFONE1) next.push("");
     next[COLUMN_DEST_TELEFONE1] = String(next[COLUMN_DEST_TELEFONE1]) + "    ";
+    return next;
+  });
+  return [header, ...dataRows];
+}
+
+function fillEmptyBairroColumn(rows) {
+  if (rows.length === 0) return rows;
+  const header = rows[0];
+  const dataRows = rows.slice(1).map((row) => {
+    const next = [...row];
+    while (next.length <= COLUMN_DEST_BAIRRO) next.push("");
+    if (String(next[COLUMN_DEST_BAIRRO]).trim() === "" || String(next[COLUMN_DEST_BAIRRO]).trim().toLowerCase() === "null") {
+      next[COLUMN_DEST_BAIRRO] = "NÃO INFORMADO";
+    }
     return next;
   });
   return [header, ...dataRows];
