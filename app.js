@@ -342,11 +342,17 @@ function parseCsv(text, delimiter) {
     const nextChar = text[index + 1];
 
     if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        cell += '"';
-        index += 1;
+      if (inQuotes) {
+        if (nextChar === '"') {
+          cell += '"';
+          index += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else if (cell === "") {
+        inQuotes = true;
       } else {
-        inQuotes = !inQuotes;
+        cell += char;
       }
       continue;
     }
